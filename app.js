@@ -2,10 +2,15 @@ const createError = require('http-errors')
 const express = require('express')
 const path = require('path')
 const logger = require('morgan')
+const session = require('express-session')
 
 const mainRouter = require('./routes/')
+// const { Console } = require('console')
+const flash = require('connect-flash');
 
 const app = express()
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
@@ -17,6 +22,21 @@ process.env.NODE_ENV === 'development'
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use(flash());
+
+app.use(
+  session({
+    secret: 'loftschool',
+    key: 'sessionkey',
+    cookie: {
+      path: '/',
+      httpOnly: true,
+      maxAge: 10 * 60 * 1000
+    },
+    saveUninitialized: false,
+    resave: false
+  })
+)
 
 app.use(express.static(path.join(__dirname, 'public')))
 
@@ -40,4 +60,4 @@ app.use((err, req, res, next) => {
   res.render('error')
 })
 
-app.listen(3000, () => {})
+app.listen(3000, () => {console.log("start server")})
