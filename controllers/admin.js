@@ -32,7 +32,7 @@ exports.updateSkills = ({ age, concerts, cities, years }) => new Promise(async (
       }
     } else reject("Не заполнено поле Число городов")
     if (years) {
-      newSkills.years ={
+      newSkills.years = {
         number: years,
         text: "Лет на сцене в качестве скрипача"
       }
@@ -40,6 +40,28 @@ exports.updateSkills = ({ age, concerts, cities, years }) => new Promise(async (
 
     db.get("skills").assign(newSkills).write()
     resolve(db.get("skills").value())
+  } catch (err) {
+    reject(err)
+  }
+})
+
+exports.addProduct = (product) => new Promise(async (resolve, reject) => {
+  try {
+    console.log("addProduct");
+    db.get('products')
+      .push(product)
+      .write()
+    resolve(true)
+  } catch {
+    reject(err)
+  }
+
+})
+
+exports.getProducts = () => new Promise(async (resolve, reject) => {
+  try {
+    let result = db.get('products').value();
+    resolve(result)
   } catch (err) {
     reject(err)
   }

@@ -38,12 +38,10 @@ router.post('/skills', async (req, res, next) => {
     const result = await admCntr.updateSkills(req.body)
     req.flash('infoSkills', 'Данные установлены')
     res.redirect('/admin')
-    // res.render('pages/admin', { title: 'Admin page', msgskill: 'Данные установлены' })
   }
   catch (err) {
     req.flash('infoSkills', err)
     res.redirect('/admin')
-    // res.render('pages/admin', { title: 'Admin page', msgskill: err }) 
   }
 
 
@@ -51,17 +49,20 @@ router.post('/skills', async (req, res, next) => {
 
 
 const validation = (fields, files) => {
-  if (files.photo.name === '' || files.photo.size === 0) {
+  if (files.photo.originalFilename === '' || files.photo.size === 0) {
     return { status: 'Не загружена картинка!', err: true }
   }
-  if (!fields.name) {
+  if (!fields.name ) {
     return { status: 'Не указано описание картинки!', err: true }
+  }
+  if (!fields.price) {
+    return { status: 'Не указанa цена!', err: true }
   }
   return { status: 'Ok', err: false }
 }
 
 
-router.post('/upload', (req, res, next) => {
+router.post('/upload', async (req, res, next) => {
   /* TODO:
    Реализовать сохранения объекта товара на стороне сервера с картинкой товара и описанием
     в переменной photo - Картинка товара
@@ -71,47 +72,47 @@ router.post('/upload', (req, res, next) => {
   */
   let form = new formidable.IncomingForm()
   let upload = path.join('./public', 'assets', 'img', 'products')
-  console.log(upload);
+
   if (!fs.existsSync(upload)) {
     fs.mkdirSync(upload)
   }
 
-  // console.log(`dirname: ${__dirname}`)
-  // console.log(`cwd: ${process.cwd()}`)
-
   form.uploadDir = path.join(process.cwd(), upload)
 
   form.parse(req, function (err, fields, files) {
+
     if (err) {
       return next(err)
     }
 
-    // const valid = validation(fields, files)
+    const valid = validation(fields, files)
 
-    // if (valid.err) {
-    //   fs.unlinkSync(files.photo.path)
-    //   req.flash("infoImages", valid.status)
-    //   return res.redirect(`/admin`)
-    // }
-    console.log(files.photo);
-    const fileName = path.join(upload, files.photo.name)
+    if (valid.err) {
+      fs.unlinkSync(files.photo.filepath)
+      req.flash("infoImages", valid.status)
+      return res.redirect(`/admin`)
+    }
+    const fileName = path.join(upload, files.photo.originalFilename)
 
-    fs.rename(files.photo.path, fileName, function (err) {
+    fs.rename(files.photo.filepath, fileName, async function (err) {
       if (err) {
         console.error(err.message)
+        req.flash('infoImages', 'Ошибка загрузки')
+        res.redirect('/admin')
         return
       }
 
-      // let dir = fileName.substr(fileName.indexOf('\\'))
+      let dir = path.join('./assets', 'img', 'products', files.photo.originalFilename)
 
-      // db.set(fields.name, fileName)
-      // db.save()
+      await admCntr.addProduct({
+        src: dir,
+        name: fields.name,
+        price: fields.price
+      })
       req.flash('infoImages', 'Успешно загружено')
       res.redirect('/admin')
     })
   })
-
-  res.send('Реализовать сохранения объекта товара на стороне сервера')
 })
 
 module.exports = router

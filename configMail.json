@@ -6,8 +6,8 @@
       "port": 465,
       "secure": true,
       "auth": {
-        "user": "test@test.com",
-        "pass": "password"
+        "user": "TEST@TEST.RU",
+        "pass": "TESTTEST"
       }
     }
   }
